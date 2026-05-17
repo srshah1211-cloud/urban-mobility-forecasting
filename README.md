@@ -1,1 +1,144 @@
-# urban-mobility-forecasting
+# Urban Mobility Forecasting
+
+Predict hourly NYC taxi pickup demand by taxi zone.
+
+## Current Data Window
+
+This repo is configured for the local files currently present:
+
+- `data/raw/yellow_tripdata_2026-01.parquet`
+- `data/raw/yellow_tripdata_2026-02.parquet`
+- `data/raw/yellow_tripdata_2026-03.parquet`
+- `data/external/taxi_zone_lookup.csv`
+
+## Setup
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+## External Data
+
+Generate holidays:
+
+```bash
+python3 -m src.ingestion.load_holidays \
+  --years 2026 \
+  --output data/external/us_holidays_2026.csv
+```
+
+Fetch weather from Open-Meteo:
+
+```bash
+python3 -m src.ingestion.load_weather_data \
+  --start-date 2026-01-01 \
+  --end-date 2026-03-31 \
+  --output data/external/weather_nyc_2026_01_03.csv
+```
+
+The weather fetch uses NYC coordinates, the hourly variables from the project plan,
+and `timezone=America/New_York` so weather timestamps align with TLC taxi pickup
+timestamps.
+
+## Build Processed Data
+
+After the weather CSV exists:
+
+```bash
+python3 -m src.pipeline \
+  --start-date 2026-01-01 \
+  --end-date 2026-03-31 \
+  --weather-path data/external/weather_nyc_2026_01_03.csv \
+  --holidays-path data/external/us_holidays_2026.csv
+```
+
+Outputs:
+
+- `data/processed/hourly_zone_demand.parquet`
+- `data/processed/feature_table.parquet`
+
+## Train Models
+
+```bash
+python3 -m src.models.train
+```
+
+This trains a historical-average baseline, random forest, and XGBoost if
+installed. By default it also writes model metrics, holdout predictions, and 30
+days of future predictions into PostgreSQL when `DATABASE_URL` is reachable and
+the base tables have already been loaded.
+
+Useful options:
+
+```bash
+# Train and store 30 days of future predictions in Postgres
+python3 -m src.models.train --future-days 30
+
+# Train locally without writing model runs/predictions to Postgres
+python3 -m src.models.train --no-store-to-postgres
+```
+
+## API
+
+```bash
+uvicorn api.main:app --reload
+```
+
+Endpoints:
+
+- `GET /health`
+- `GET /zones`
+- `GET /demand/actual?zone_id=161&start_date=2026-01-01&end_date=2026-01-07`
+- `POST /predictions`
+
+The API reads from PostgreSQL when `DATABASE_URL` is reachable. If the database
+is not running or the tables are empty, it falls back to local parquet/CSV files.
+
+## PostgreSQL
+
+Start Postgres:
+
+```bash
+docker compose up -d postgres
+```
+
+Load processed data into Postgres:
+
+```bash
+python3 -m src.database.load_to_postgres \
+  --weather-path data/external/weather_nyc_2026_01_03.csv \
+  --holidays-path data/external/us_holidays_2026.csv
+```
+
+Run the API and dashboard against Postgres:
+
+```bash
+docker compose up api dashboard
+```
+
+The dashboard also prefers PostgreSQL and falls back to
+`data/processed/feature_table.parquet` for local development.
+
+## One Command Data Load
+
+After Postgres is running, this command generates holidays, uses the existing
+weather CSV, rebuilds processed parquet files, applies the SQL schema, and loads
+Postgres:
+
+```bash
+python3 -m src.run_all --use-existing-weather
+```
+
+To also train models and store dashboard-ready predictions:
+
+```bash
+python3 -m src.run_all --use-existing-weather --train --future-days 30
+```
+
+Without `--use-existing-weather`, the command fetches weather from Open-Meteo.
+
+## Tests
+
+```bash
+python3 -m pytest
+```

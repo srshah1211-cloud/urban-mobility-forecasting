@@ -1,0 +1,1 @@
+-- Static seed data can be added here after the CSV loading path is finalized.

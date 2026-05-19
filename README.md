@@ -149,3 +149,17 @@ Project architecture and modeling details are documented in:
 ```bash
 python3 -m pytest
 ```
+
+## Screenshots
+<img width="1510" height="810" alt="image" src="https://github.com/user-attachments/assets/97632059-e9e0-4ba8-b13c-e077b63a7c8c" />
+<img width="1505" height="828" alt="image" src="https://github.com/user-attachments/assets/be83c842-8efb-45ab-a888-70ffd9c3da2c" />
+<img width="1509" height="847" alt="image" src="https://github.com/user-attachments/assets/a20ffc2a-ffb5-4f9b-86cc-a329197786af" />
+<img width="1508" height="855" alt="image" src="https://github.com/user-attachments/assets/2619ff2f-712e-4513-8812-c4e6530c1905" />
+<img width="1487" height="846" alt="image" src="https://github.com/user-attachments/assets/fc7231bb-65cc-4ef4-aa66-08abb600b6f9" />
+<img width="1497" height="838" alt="image" src="https://github.com/user-attachments/assets/9b601729-c88e-4881-a615-b88c223abf86" />
+
+
+
+
+
+

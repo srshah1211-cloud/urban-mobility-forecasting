@@ -137,6 +137,13 @@ python3 -m src.run_all --use-existing-weather --train --future-days 30
 
 Without `--use-existing-weather`, the command fetches weather from Open-Meteo.
 
+## Documentation
+
+Project architecture and modeling details are documented in:
+
+- `docs/architecture.md`
+- `docs/modeling_approach.md`
+
 ## Tests
 
 ```bash
